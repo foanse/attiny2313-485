@@ -1,0 +1,414 @@
+Archive member included because of file (symbol)
+
+c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+                              c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o (exit)
+c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_clear_bss.o)
+                              tyni.o (__do_clear_bss)
+c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eerd_byte_attiny2313.o)
+                              tyni.o (__eerd_byte_tn2313)
+c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eewr_byte_attiny2313.o)
+                              tyni.o (__eewr_byte_tn2313)
+
+Allocating common symbols
+Common symbol       size              file
+
+COUNT               0x1               tyni.o
+PLAN                0x18              tyni.o
+number              0x1               tyni.o
+COUNT_COMAND        0x2               tyni.o
+FACT                0x18              tyni.o
+BLOCK               0x18              tyni.o
+BUF                 0x20              tyni.o
+DEV2                0x1               tyni.o
+DEV1                0x1               tyni.o
+status              0x1               tyni.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+text             0x00000000         0x00002000         xr
+data             0x00800060         0x0000ffa0         rw !x
+eeprom           0x00810000         0x00010000         rw !x
+fuse             0x00820000         0x00000400         rw !x
+lock             0x00830000         0x00000400         rw !x
+signature        0x00840000         0x00000400         rw !x
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+LOAD tyni.o
+LOAD c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a
+LOAD c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a
+LOAD c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a
+
+.hash
+ *(.hash)
+
+.dynsym
+ *(.dynsym)
+
+.dynstr
+ *(.dynstr)
+
+.gnu.version
+ *(.gnu.version)
+
+.gnu.version_d
+ *(.gnu.version_d)
+
+.gnu.version_r
+ *(.gnu.version_r)
+
+.rel.init
+ *(.rel.init)
+
+.rela.init
+ *(.rela.init)
+
+.rel.text
+ *(.rel.text)
+ *(.rel.text.*)
+ *(.rel.gnu.linkonce.t*)
+
+.rela.text
+ *(.rela.text)
+ *(.rela.text.*)
+ *(.rela.gnu.linkonce.t*)
+
+.rel.fini
+ *(.rel.fini)
+
+.rela.fini
+ *(.rela.fini)
+
+.rel.rodata
+ *(.rel.rodata)
+ *(.rel.rodata.*)
+ *(.rel.gnu.linkonce.r*)
+
+.rela.rodata
+ *(.rela.rodata)
+ *(.rela.rodata.*)
+ *(.rela.gnu.linkonce.r*)
+
+.rel.data
+ *(.rel.data)
+ *(.rel.data.*)
+ *(.rel.gnu.linkonce.d*)
+
+.rela.data
+ *(.rela.data)
+ *(.rela.data.*)
+ *(.rela.gnu.linkonce.d*)
+
+.rel.ctors
+ *(.rel.ctors)
+
+.rela.ctors
+ *(.rela.ctors)
+
+.rel.dtors
+ *(.rel.dtors)
+
+.rela.dtors
+ *(.rela.dtors)
+
+.rel.got
+ *(.rel.got)
+
+.rela.got
+ *(.rela.got)
+
+.rel.bss
+ *(.rel.bss)
+
+.rela.bss
+ *(.rela.bss)
+
+.rel.plt
+ *(.rel.plt)
+
+.rela.plt
+ *(.rela.plt)
+
+.text           0x00000000      0x5be
+ *(.vectors)
+ .vectors       0x00000000       0x26 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+                0x00000000                __vector_default
+                0x00000000                __vectors
+ *(.vectors)
+ *(.progmem.gcc*)
+ *(.progmem*)
+                0x00000026                . = ALIGN (0x2)
+                0x00000026                __trampolines_start = .
+ *(.trampolines)
+ .trampolines   0x00000026        0x0 linker stubs
+ *(.trampolines*)
+                0x00000026                __trampolines_end = .
+ *(.jumptables)
+ *(.jumptables*)
+ *(.lowtext)
+ *(.lowtext*)
+                0x00000026                __ctors_start = .
+ *(.ctors)
+                0x00000026                __ctors_end = .
+                0x00000026                __dtors_start = .
+ *(.dtors)
+                0x00000026                __dtors_end = .
+ SORT(*)(.ctors)
+ SORT(*)(.dtors)
+ *(.init0)
+ .init0         0x00000026        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+                0x00000026                __init
+ *(.init0)
+ *(.init1)
+ *(.init1)
+ *(.init2)
+ .init2         0x00000026        0x8 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+ *(.init2)
+ *(.init3)
+ *(.init3)
+ *(.init4)
+ .init4         0x0000002e       0x10 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_clear_bss.o)
+                0x0000002e                __do_clear_bss
+ *(.init4)
+ *(.init5)
+ *(.init5)
+ *(.init6)
+ *(.init6)
+ *(.init7)
+ *(.init7)
+ *(.init8)
+ *(.init8)
+ *(.init9)
+ .init9         0x0000003e        0x4 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+ *(.init9)
+ *(.text)
+ .text          0x00000042        0x2 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+                0x00000042                __vector_1
+                0x00000042                __vector_12
+                0x00000042                __bad_interrupt
+                0x00000042                __vector_6
+                0x00000042                __vector_3
+                0x00000042                __vector_11
+                0x00000042                __vector_17
+                0x00000042                __vector_5
+                0x00000042                __vector_9
+                0x00000042                __vector_2
+                0x00000042                __vector_15
+                0x00000042                __vector_8
+                0x00000042                __vector_10
+                0x00000042                __vector_16
+                0x00000042                __vector_18
+ .text          0x00000044      0x54a tyni.o
+                0x00000044                read_registr_param
+                0x000000ba                read_bit_output
+                0x000000bc                USART_Init
+                0x000000d8                write_registr_param
+                0x0000016a                USART_Transmit
+                0x00000172                __vector_4
+                0x0000018a                __vector_7
+                0x00000216                __vector_13
+                0x00000244                __vector_14
+                0x00000266                ModRTU_CRC
+                0x000002b2                send_message
+                0x0000030c                write_registrs_param
+                0x00000388                read_registr_data
+                0x000003f2                get_com_event_counter
+                0x0000040c                report_slave_id
+                0x00000462                check_CRC
+                0x0000048c                main
+ .text          0x0000058e        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+ .text          0x0000058e        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_clear_bss.o)
+ .text          0x0000058e        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eerd_byte_attiny2313.o)
+ .text          0x0000058e        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eewr_byte_attiny2313.o)
+                0x0000058e                . = ALIGN (0x2)
+ *(.text.*)
+ .text.libgcc   0x0000058e        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+ .text.libgcc   0x0000058e        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_clear_bss.o)
+ .text.avr-libc
+                0x0000058e       0x10 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eerd_byte_attiny2313.o)
+                0x0000058e                __eerd_byte_tn2313
+ .text.avr-libc
+                0x0000059e       0x1c c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eewr_byte_attiny2313.o)
+                0x0000059e                __eewr_byte_tn2313
+                0x000005a0                __eewr_r18_tn2313
+                0x000005ba                . = ALIGN (0x2)
+ *(.fini9)
+ .fini9         0x000005ba        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+                0x000005ba                _exit
+                0x000005ba                exit
+ *(.fini9)
+ *(.fini8)
+ *(.fini8)
+ *(.fini7)
+ *(.fini7)
+ *(.fini6)
+ *(.fini6)
+ *(.fini5)
+ *(.fini5)
+ *(.fini4)
+ *(.fini4)
+ *(.fini3)
+ *(.fini3)
+ *(.fini2)
+ *(.fini2)
+ *(.fini1)
+ *(.fini1)
+ *(.fini0)
+ .fini0         0x000005ba        0x4 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+ *(.fini0)
+                0x000005be                _etext = .
+
+.data           0x00800060        0x0 load address 0x000005be
+                0x00800060                PROVIDE (__data_start, .)
+ *(.data)
+ .data          0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+ .data          0x00800060        0x0 tyni.o
+ .data          0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+ .data          0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_clear_bss.o)
+ .data          0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eerd_byte_attiny2313.o)
+ .data          0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eewr_byte_attiny2313.o)
+ *(.data*)
+ *(.rodata)
+ *(.rodata*)
+ *(.gnu.linkonce.d*)
+                0x00800060                . = ALIGN (0x2)
+                0x00800060                _edata = .
+                0x00800060                PROVIDE (__data_end, .)
+
+.bss            0x00800060       0x6f
+                0x00800060                PROVIDE (__bss_start, .)
+ *(.bss)
+ .bss           0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+ .bss           0x00800060        0x0 tyni.o
+ .bss           0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_exit.o)
+ .bss           0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/avr25\libgcc.a(_clear_bss.o)
+ .bss           0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eerd_byte_attiny2313.o)
+ .bss           0x00800060        0x0 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eewr_byte_attiny2313.o)
+ *(.bss*)
+ *(COMMON)
+ COMMON         0x00800060       0x6f tyni.o
+                0x00800060                COUNT
+                0x00800061                PLAN
+                0x00800079                number
+                0x0080007a                COUNT_COMAND
+                0x0080007c                FACT
+                0x00800094                BLOCK
+                0x008000ac                BUF
+                0x008000cc                DEV2
+                0x008000cd                DEV1
+                0x008000ce                status
+                0x008000cf                PROVIDE (__bss_end, .)
+                0x000005be                __data_load_start = LOADADDR (.data)
+                0x000005be                __data_load_end = (__data_load_start + SIZEOF (.data))
+
+.noinit         0x008000cf        0x0
+                0x008000cf                PROVIDE (__noinit_start, .)
+ *(.noinit*)
+                0x008000cf                PROVIDE (__noinit_end, .)
+                0x008000cf                _end = .
+                0x008000cf                PROVIDE (__heap_start, .)
+
+.eeprom         0x00810000        0x0
+ *(.eeprom*)
+                0x00810000                __eeprom_end = .
+
+.fuse
+ *(.fuse)
+ *(.lfuse)
+ *(.hfuse)
+ *(.efuse)
+
+.lock
+ *(.lock*)
+
+.signature
+ *(.signature*)
+
+.stab           0x00000000      0x828
+ *(.stab)
+ .stab          0x00000000      0x6b4 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+ .stab          0x000006b4       0x90 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eerd_byte_attiny2313.o)
+                                 0x9c (size before relaxing)
+ .stab          0x00000744       0xe4 c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25\libc.a(eewr_byte_attiny2313.o)
+                                 0xf0 (size before relaxing)
+
+.stabstr        0x00000000      0x14b
+ *(.stabstr)
+ .stabstr       0x00000000      0x14b c:/program files/atmel/avr studio 5.0/avr toolchain/bin/../lib/gcc/avr/4.5.1/../../../../avr/lib/avr25/crttn2313.o
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment
+ *(.comment)
+
+.debug
+ *(.debug)
+
+.line
+ *(.line)
+
+.debug_srcinfo
+ *(.debug_srcinfo)
+
+.debug_sfnames
+ *(.debug_sfnames)
+
+.debug_aranges  0x00000000       0x20
+ *(.debug_aranges)
+ .debug_aranges
+                0x00000000       0x20 tyni.o
+
+.debug_pubnames
+                0x00000000      0x1b0
+ *(.debug_pubnames)
+ .debug_pubnames
+                0x00000000      0x1b0 tyni.o
+
+.debug_info     0x00000000      0x5a0
+ *(.debug_info)
+ .debug_info    0x00000000      0x5a0 tyni.o
+ *(.gnu.linkonce.wi.*)
+
+.debug_abbrev   0x00000000      0x24d
+ *(.debug_abbrev)
+ .debug_abbrev  0x00000000      0x24d tyni.o
+
+.debug_line     0x00000000      0x795
+ *(.debug_line)
+ .debug_line    0x00000000      0x795 tyni.o
+
+.debug_frame    0x00000000      0x120
+ *(.debug_frame)
+ .debug_frame   0x00000000      0x120 tyni.o
+
+.debug_str      0x00000000      0x24b
+ *(.debug_str)
+ .debug_str     0x00000000      0x24b tyni.o
+                                0x284 (size before relaxing)
+
+.debug_loc      0x00000000      0x352
+ *(.debug_loc)
+ .debug_loc     0x00000000      0x352 tyni.o
+
+.debug_macinfo
+ *(.debug_macinfo)
+OUTPUT(tyni.elf elf32-avr)
+LOAD linker stubs
+
+.debug_pubtypes
+                0x00000000       0x38
+ .debug_pubtypes
+                0x00000000       0x38 tyni.o
