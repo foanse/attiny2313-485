@@ -20,6 +20,8 @@ void read_bit_output(void);
 void bits_output(void);
 unsigned char write_registr_param(unsigned char address, unsigned char data);
 void write_registrs_param(void);
+void spi1(void);
+void spi2(void);
 
 unsigned char BUF[MAX];
 unsigned char FACT[24];
@@ -29,13 +31,20 @@ unsigned char status,COUNT,number,DEV1,DEV2;
 unsigned short COUNT_COMAND;
 int main(void)
 {
+	unsigned char i;
+	if(eeprom_read_byte(0)==0xff){
+		eeprom_write_byte(2,0x00);
+		eeprom_write_byte(3,0x00);
+		eeprom_write_byte(4,0x00);
+		for(i=8;i<56;i++)
+			eeprom_write_byte(i,0x00);
+	}
 	USART_Init(eeprom_read_byte(0));
 	number=eeprom_read_byte(1);
 	DEV1=eeprom_read_byte(2);
 	DEV2=eeprom_read_byte(3);
 	DDRD= 0x74;
 	PORTD=eeprom_read_byte(4)&0x30;
-	unsigned char i;
 	for(i=0;i<24;i++){
 		FACT[i]=0;
 		PLAN[i]=eeprom_read_byte(8+i);
@@ -50,7 +59,7 @@ int main(void)
 	TCCR0A=0x02;
 	TCCR0B=0x00;
 	TIMSK=(1<<OCIE0A)|(1<<OCIE0B)|(1<<OCIE1A);
-	DDRB=0xFF;
+	DDRB=0x77;
 	sei();
 	for(;;)
 	{
@@ -83,6 +92,8 @@ int main(void)
 		COUNT=0;
 		}
 	_delay_ms(100);
+	if(DEV1&0x80) spi1();
+	if(DEV2&0x80) spi2();
 	}
 }
 void report_slave_id()
@@ -132,45 +143,45 @@ unsigned short read_registr_param(unsigned char address)
 {
 	if(address<16)
 		return FACT[address];
-	if((address>=16)&&(address<32))
+	if(address<32)
 		return PLAN[address-16];
-	if((address>=32)&&(address<48))
+	if(address<48)
 		return BLOCK[address-32];
-	if((address>=48)&&(address<176))
+	if(address<176)
 		return eeprom_read_byte(address-48);
 	if(address==176)
 		return ((PORTD&0x20)>>1)|((PORTD&0x10)>>4);
 }
-unsigned char write_registr_param(unsigned char adress, unsigned char data)
+unsigned char write_registr_param(unsigned char address, unsigned char data)
 {
-	if(adress<16)
-		FACT[adress]=data;
-	if((adress>=16)&&(adress<32))
-		PLAN[adress-16]=data;
-	if((adress>=32)&&(adress<48))
-		BLOCK[adress-32]=data;
-	if((adress>=48)&&(adress<176))
-		eeprom_write_byte(adress-48,data);
-	if(adress==176){
+	if((address>=16)&&(address<32))
+		PLAN[address-16]=data&BLOCK[address-16];
+	if((address>=32)&&(address<48)){
+		BLOCK[address-32]=data;
+		PLAN[address-32]&=data;
+	}
+	if((address>=48)&&(address<176))
+		eeprom_write_byte(address-48,data);
+	if(address==176){
 		if(data&0x01) PORTD|=0x10; 
 		if(data&0x02) PORTD&=~(0x10);
 		if(data&0x04) PORTD|=0x20;
 		if(data&0x08) PORTD&=~(0x20);
 		}
-	if(adress==177)
+	if(address==177)
 		USART_Init(data);
-	if(adress==178){
+	if(address==178){
 		eeprom_write_byte(1,data);
 		number=data;
 		}		
-	if(adress>178)
+	if(address>178)
 		return 0;
 	else
 		return 1;
 }
 void write_registrs_param(void)
 {
-	unsigned char j,i,k;
+/*	unsigned char j,i,k;
 	if(BUF[6]!=(COUNT-9)){
 		BUF[1]|=0x80;
 		BUF[2]=0x01;
@@ -184,6 +195,7 @@ void write_registrs_param(void)
 		j+=2;
 	}		
 	COUNT=5;send_message();
+*/
 }
 void read_bit_output(void)
 {
@@ -291,3 +303,12 @@ unsigned char check_CRC()
 	CRC=ModRTU_CRC();
 	return (BUF[COUNT-2]==(unsigned char)(CRC>>8))&(BUF[COUNT-1]==(unsigned char)CRC);
 }
+void spi1(void)
+{
+	
+}
+void spi2(void)
+{
+	
+}
+
