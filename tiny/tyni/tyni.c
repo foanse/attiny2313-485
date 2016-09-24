@@ -221,7 +221,7 @@ void send_message(void)
 		USART_Transmit(BUF[i]);
 	PORTD&=~(0x04);
 }
-void USART_Init( unsigned char i ) //Функция инициализации USART
+void USART_Init( unsigned char i )
 {
 	unsigned int baudrate;
 	switch (i){
@@ -229,14 +229,14 @@ void USART_Init( unsigned char i ) //Функция инициализации U
 	}
 	UBRRH = (unsigned char) (baudrate>>8);
 	UBRRL = (unsigned char) baudrate;
-	UCSRA = (1<<U2X); //Удвоение скорости
-	UCSRB = (1<<RXEN)|(1<<TXEN)|(1<<RXCIE); //Разрешение на прием и н апередачу через USART
+	UCSRA = (1<<U2X);
+	UCSRB = (1<<RXEN)|(1<<TXEN)|(1<<RXCIE);
 	UCSRC = (0<<USBS)|(1<<UCSZ0)|(1<<UCSZ1);
 } 
-void USART_Transmit( unsigned char data ) //Функция отправки данных
+void USART_Transmit( unsigned char data )
 {
-	while ( !(UCSRA & (1<<UDRE)) ); //Ожидание опустошения буфера приема
-	UDR = data; //Начало передачи данных			        
+	while ( !(UCSRA & (1<<UDRE)) );
+	UDR = data;			        
 }
 ISR(TIMER1_COMPA_vect)
 {
@@ -287,10 +287,7 @@ unsigned short ModRTU_CRC(void)
 }
 unsigned char check_CRC()
 {
-	unsigned char i,j;
 	unsigned short CRC;
 	CRC=ModRTU_CRC();
-	j=(unsigned char)(CRC>>8);
-	i=(unsigned char)CRC;
-	return (BUF[COUNT-2]==j)&(BUF[COUNT-1]==i);
+	return (BUF[COUNT-2]==(unsigned char)(CRC>>8))&(BUF[COUNT-1]==(unsigned char)CRC);
 }
