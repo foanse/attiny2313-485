@@ -31,15 +31,19 @@ int main(void)
 {
 	USART_Init(eeprom_read_byte(0));
 	number=eeprom_read_byte(1);
-//	DEV1=eeprom_read_byte(2);
-//	DEV2=eeprom_read_byte(3);
+	DEV1=eeprom_read_byte(2);
+	DEV2=eeprom_read_byte(3);
 	DDRD= 0x74;
-//	PORTD=eeprom_read_byte(4);
-//	for(COUNT=0;COUNT<24;COUNT++){
-//		FACT[COUNT]=0;
-//		PLAN[COUNT]=eeprom_read_byte(8+COUNT);
-//		BLOCK[COUNT]=eeprom_read_byte(32+COUNT);
-//	}
+	PORTD=eeprom_read_byte(4)&0x30;
+	unsigned char i;
+	for(i=0;i<24;i++){
+		FACT[i]=0;
+		PLAN[i]=eeprom_read_byte(8+i);
+		BLOCK[i]=eeprom_read_byte(32+i);
+	}
+	COUNT=0;
+	status=0;
+	COUNT_COMAND=0;
 	TCCR1A=0x00;
 	OCR1AH=0x08;
 	OCR1AL=0x00;
@@ -47,9 +51,6 @@ int main(void)
 	TCCR0B=0x00;
 	TIMSK=(1<<OCIE0A)|(1<<OCIE0B)|(1<<OCIE1A);
 	DDRB=0xFF;
-	status=0;
-	COUNT=0;
-	COUNT_COMAND=0;
 	sei();
 	for(;;)
 	{
@@ -60,9 +61,8 @@ int main(void)
 				TCCR1B=0x0D;
 				COUNT_COMAND++;
 			switch(BUF[1]){
-				case 0x01:read_bit_output();break;
+//				case 0x01:read_bit_output();break;
 //				case 0x02:read_bit_input();break;
-//				case 0x03:read_registr_param();break;
 				case 0x03:read_registr_data();break;
 				case 0x04:read_registr_data();break;
 //				case 0x05:write_bit_output();break;
@@ -187,7 +187,7 @@ void write_registrs_param(void)
 }
 void read_bit_output(void)
 {
-/*	unsigned short i,j,begin,end;
+	unsigned short i,j,begin,end;
 	unsigned char RS,k;
 	begin=(BUF[2]<<8)|BUF[3];
 	end=begin+(BUF[4]<<8)|BUF[5];
@@ -204,7 +204,7 @@ void read_bit_output(void)
 	BUF[2]=j-3;
 	COUNT=j+2;
 	send_message();
-*/}
+}
 void send_message(void)
 {
 	if(BUF[0]!=number) return;
