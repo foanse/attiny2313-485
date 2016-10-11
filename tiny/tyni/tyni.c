@@ -33,6 +33,7 @@ int main(void)
 {
 	unsigned char i;
 	if(eeprom_read_byte(0)==0xff){
+		eeprom_write_byte(0,0x00);
 		eeprom_write_byte(2,0x00);
 		eeprom_write_byte(3,0x00);
 		eeprom_write_byte(4,0x00);
@@ -43,12 +44,13 @@ int main(void)
 	number=eeprom_read_byte(1);
 	DEV1=eeprom_read_byte(2);
 	DEV2=eeprom_read_byte(3);
+	DDRB= 0x77;
 	DDRD= 0x74;
 	PORTD=eeprom_read_byte(4)&0x30;
 	for(i=0;i<24;i++){
 		FACT[i]=0;
-		PLAN[i]=eeprom_read_byte(8+i);
 		BLOCK[i]=eeprom_read_byte(32+i);
+		PLAN[i]=eeprom_read_byte(8+i)&BLOCK[i];
 	}
 	COUNT=0;
 	status=0;
@@ -92,8 +94,10 @@ int main(void)
 		COUNT=0;
 		}
 	_delay_ms(100);
-	if(DEV1&0x80) spi1();
-	if(DEV2&0x80) spi2();
+//	if(DEV1&0x80) 
+		spi1();
+//	if(DEV2&0x80) 
+		spi2();
 	}
 }
 void report_slave_id()
@@ -305,7 +309,22 @@ unsigned char check_CRC()
 }
 void spi1(void)
 {
-	
+	unsigned char i,j;
+	for(i=0;i<(DEV1&0x7F);i++)
+		for(j=0;j<8;j++){
+		PORTB&=~(0x01);
+		_delay_us(10);
+		if(PLAN[i]&(1<<j))
+			PORTB|=0x02;
+		else
+			PORTB&=~(0x02);
+		_delay_us(10);
+		PORTB|=0x01;
+		_delay_us(10);
+	}
+	PORTB&=~(0x04);
+	_delay_us(10);
+	PORTB|=0x04;
 }
 void spi2(void)
 {
