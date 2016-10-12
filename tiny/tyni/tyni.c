@@ -6,7 +6,6 @@
 
 #define F_CPU 8000000L
 #define MAX 20
-#define SMAX 20
 
 
 unsigned char PLAN[32];
@@ -15,8 +14,7 @@ unsigned char number;
 unsigned char DEV1,DEV2,ER1,ER2;
 volatile unsigned short COUNT_COMAND;
 
-unsigned char mess[20];
-unsigned char cmess;
+volatile unsigned short CRC;
 volatile unsigned char status;
 volatile unsigned char BUF[MAX],COUNT;
 
@@ -44,8 +42,9 @@ ISR(USART_RX_vect)
 }
 ISR(TIMER0_COMPA_vect)
 {
-	if((status&0x10)==0)
+	if((status&0x10)==0){
 		status|=0x80;	
+	}
 	else
 		{
 		status=0x00;
@@ -58,7 +57,7 @@ ISR(TIMER0_COMPB_vect)
 	status|=0x20;
 }
 
-/**/void USART_Init( unsigned char i )
+void USART_Init( unsigned char i )
 {
 	unsigned int baudrate;
 	switch (i){
@@ -70,22 +69,42 @@ ISR(TIMER0_COMPB_vect)
 	UCSRB = (1<<RXEN)|(1<<TXEN)|(1<<RXCIE);
 	UCSRC = (0<<USBS)|(1<<UCSZ0)|(1<<UCSZ1);
 } 
-void USART_Transmit( unsigned char *data )
+void USART_Transmit( unsigned char data )
 {
 	while ( !(UCSRA & (1<<UDRE)) );
-	UDR = *data;			        
+	UDR = data;			        
 }
-void ADDCHAR(unsigned char buf){
-	if(cmess>17) {return;PORTB=0xff;}
-	mess[cmess]=buf;
-	cmess++;
+void sendchar(unsigned char data){
+	if(number!=BUF[0]) return;
+    unsigned char i;
+	CRC ^= (unsigned char)data;
+	for (i = 8; i != 0; i--) {
+		if ((CRC & 0x0001) != 0) {
+			CRC >>= 1;
+			CRC ^= 0xA001;
+		}
+		else
+			CRC >>= 1;
+	}
+	if(!(PORTD&0x04)){
+		PORTD|=0x04;
+		_delay_ms(1);
+	}
+	USART_Transmit(data);	
 }
-unsigned char CRC(unsigned char *buf,unsigned char count)
+void sendcrc(){
+	if(number!=BUF[0]) return;
+	USART_Transmit((unsigned char)(CRC>>8));
+	USART_Transmit((unsigned char)CRC);
+	PORTD&=~(0x04);
+	CRC=0xFFFF;
+}
+unsigned char CRCin(unsigned char count)
 {
 	unsigned short crc = 0xFFFF;
     unsigned char pos,i,h[2];
-    for (pos = 0; pos < (count); pos++) {
-		crc ^= (unsigned char)buf[pos];
+    for (pos = 0; pos < count; pos++) {
+		crc ^= (unsigned char)BUF[pos];
 		for (i = 8; i != 0; i--) {
 			if ((crc & 0x0001) != 0) {
 				crc >>= 1;
@@ -95,30 +114,17 @@ unsigned char CRC(unsigned char *buf,unsigned char count)
 			crc >>= 1;
 		}
     }
+
 	h[0]=(unsigned char)(crc>>8);
 	h[1]=(unsigned char)crc;
-	if((h[0]==buf[count])&&(h[1]==buf[count+1])) 
+	if((h[0]==BUF[count])&&(h[1]==BUF[count+1])) 
 		i=1;
-	else
+	else{
 		i=0;
-	buf[count]=h[0];
-	buf[count+1]=h[1];
+	USART_Transmit(&h[0]);
+	USART_Transmit(&h[1]);
+	}
 	return i;
-}
-void SENDMES(void)
-{
-	if(BUF[0]!=number) return;
-	mess[0]=number;
-	CRC(&mess,cmess);
-	PORTD|=0x04;
-	_delay_ms(1);
-	unsigned char i;
-	for(i=0;i<cmess+2;i++){
-		USART_Transmit(&mess[i]);
-		mess[i]=0x00;
-	}		
-	cmess=1;	
-	PORTD&=~(0x04);
 }
 
 unsigned char read_registr_param(unsigned char *address)
@@ -178,17 +184,96 @@ void write_registr_param(unsigned char *address, unsigned char *data)
 		return;
 	}		
 }
+void read_bit_output(unsigned short begin, unsigned short end)
+{
+	unsigned short i,b;
+	unsigned char j=0,c=0;
+	for(i=begin;i<(begin+end);i++)
+	{
+		b=read_registr_param(i>>4);
+		if((b&(1<<(i&0x0F)))>0)
+			c|=(1<<j);
+		j++;
+		if(j>7){sendchar(c);j=0;c=0;}
+	}
+	if(j>0)sendchar(c);
+	sendcrc();
+}
 
 
 //void read_registr_data(void);
-//void read_bit_output(void);
 //void bits_output(void);
 //void write_registr_param(unsigned char address, unsigned char data);
 //void write_registrs_param(void);
 //void spi1(void);
 //void spi2(void);
+void swit(){
+	sendchar(number);
+	unsigned short B,E;
+	switch(BUF[1]){
+	case 0x01:
+/*			B=(BUF[2]<<8)|BUF[3];
+			E=(BUF[4]<<8)|(unsigned char)BUF[5];
+			if(B>=3104){
+				sendchar(0x81);
+				sendchar(0x01);
+				sendcrc();
+			}
+			else{		
+				if((B+E)>3104)
+					E=(3105)-B;
+				sendchar(0x01);
+				if((E&0x07)>0)
+					sendchar((E>>3)+1);
+				else
+					sendchar(E>>3);
+				read_bit_output(B,E);
+			}				
+*/			break;
+//				case 0x02:read_bit_input();break;
+	case 0x03:
+	case 0x04:
+			if(BUF[3]+BUF[5]>195){					
+				sendchar(0x80|BUF[1]);
+				sendchar(0x01);
+				break;
+			}								
+			sendchar(BUF[1]);
+			sendchar(BUF[5]);
+			for(B=BUF[3];B<(BUF[3]+BUF[5]);B++){	
+				sendchar(0);
+				sendchar(read_registr_param(&B));
+			}								
+			break;
+//				case 0x05:write_bit_output();break;
+	case 0x06:		
+			sendchar(BUF[1]);
+			sendchar(0);sendchar(BUF[3]);
+			sendchar(0);sendchar(BUF[5]);
+			write_registr_param(&BUF[3],&BUF[5]);
+			break;
+	case 0x0B:
+			sendchar(BUF[1]);
+			sendchar((unsigned char)(COUNT_COMAND>>8));
+			sendchar((unsigned char)COUNT_COMAND);
+			break;
+//				case 0x0F:write_bits_output();break;
+//				case 0x10:write_registrs_param();break;
+	case 0x11:
+			sendchar(BUF[1]);sendchar(12);sendchar('2');sendchar('3');sendchar(0xFF);
+			sendchar('R');sendchar('e');sendchar('l');sendchar('e');sendchar('y');sendchar(' ');sendchar('1');
+			sendchar('.');sendchar('0');
+			break;
+	default:
+			sendchar(BUF[1]|0x80);
+			sendchar(0x01);
+			COUNT_COMAND--;
+	}
+sendcrc();
+}
 
-int main(void)
+
+void main(void)
 {
 /*	
 	if(eeprom_read_byte(0)==0xff){
@@ -214,7 +299,6 @@ int main(void)
 		PLAN[COUNT]=eeprom_read_byte(8+COUNT)&BLOCK[COUNT];
 	}
 	COUNT=0;
-	cmess=1;
 	status=0;
 	COUNT_COMAND=0;
 	TCCR1A=0x00;
@@ -225,70 +309,22 @@ int main(void)
 	TIMSK=(1<<OCIE0A)|(1<<OCIE0B)|(1<<OCIE1A);
 	DDRB=0x77;
 	sei();
-	for(;;)
-	{
-	if(status&0x80)
-		{
-			if((number==BUF[0]|BUF[0]==0x00)&&(CRC(&BUF,COUNT-2))){
-				PORTD|=0x40;
-				TCCR1B=0x0D;
-				COUNT_COMAND++;
-			switch(BUF[1]){
-//				case 0x01:read_bit_output();break;
-//				case 0x02:read_bit_input();break;
-				case 0x03:
-				case 0x04:
-							ADDCHAR(BUF[1]);
-							if(BUF[3]>194){					
-								ADDCHAR(0);
-								BUF[5]=0;
-							}								
-							else{
-								if((BUF[3]+BUF[5])>194)
-									BUF[5]=195-BUF[3];
-								if(BUF[5]>(SMAX-5)) 
-									BUF[5]=SMAX-5;
-								ADDCHAR(BUF[5]);
-							}								
-							for(BUF[2]=BUF[3];BUF[2]<(BUF[3]+BUF[5]);BUF[2]++){	
-								ADDCHAR(0);
-								ADDCHAR(read_registr_param(&BUF[2]));
-							}								
-							SENDMES();
-							break;
-//				case 0x05:write_bit_output();break;
-				case 0x06:							
-							ADDCHAR(0x06);
-							ADDCHAR(0);
-							ADDCHAR(BUF[3]);
-							ADDCHAR(0);
-							ADDCHAR(BUF[5]);
-							write_registr_param(&BUF[3],&BUF[5]);
-							SENDMES();
-							break;
-				case 0x0B:
-							ADDCHAR(0x0B);
-							ADDCHAR((unsigned char)(COUNT_COMAND>>8));
-							ADDCHAR((unsigned char)COUNT_COMAND);
-							SENDMES();
-							break;
-//				case 0x0F:write_bits_output();break;
-//				case 0x10:write_registrs_param();break;
-				case 0x11:
-							ADDCHAR(0x11);ADDCHAR(12);ADDCHAR('2');ADDCHAR('3');ADDCHAR(0xFF);ADDCHAR('R');
-							ADDCHAR('e');ADDCHAR('l');ADDCHAR('e');ADDCHAR('y');ADDCHAR(' ');ADDCHAR('1');
-							ADDCHAR('.');ADDCHAR('0');SENDMES();
-							break;
-				default:
-					ADDCHAR(BUF[1]|0x80);
-					ADDCHAR(0x01);
-					SENDMES();
-					COUNT_COMAND--;
-			}			
-			}
-		status=0;
-		COUNT=0;
-		}
+	while(1){
+		PORTA=0;
+		if(status&0x80){
+			PORTA=0x01;
+			if((number==BUF[0]|BUF[0]==0x00)){
+				PORTA|=0x02;
+				if(CRCin(COUNT-2)){
+					PORTD|=0x40;
+					TCCR1B=0x0D;
+					COUNT_COMAND++;
+					swit();
+					}
+			}										
+			status=0;
+			COUNT=0;
+		}		
 	_delay_ms(100);
 /*	if((ER1&0xC0)==0) 
 		spi1();
@@ -315,31 +351,6 @@ int main(void)
 	COUNT=5;send_message();
 
 }
-*/
-/*
-void read_bit_output(void)
-{
-	unsigned short i,j,begin,end;
-	unsigned char RS,k;
-	begin=(BUF[2]<<8)|BUF[3];
-	end=begin+(BUF[4]<<8)|BUF[5];
-	for(i=2;i<MAX;i++) BUF[i]=0;
-	j=3;k=0;
-	for(i=begin;i<end;i++)
-	{
-		RS=read_registr_param(i>>3)&(1<<(i&0x07));
-		BUF[j]|=RS<<(1<<k);
-		k++;
-		if(k>7){k=0;j++;}
-		if(j>(MAX-5)) {j--;break;}
-	}
-	BUF[2]=j-3;
-	COUNT=j+2;
-	send_message();
-
-}
-*/
-/*
 void spi1(void)
 {
 	/*
