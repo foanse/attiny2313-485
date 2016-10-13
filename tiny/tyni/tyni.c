@@ -189,17 +189,13 @@ void swit(){
 	case 0x01:
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
-			E=1;
-			if((B+E)>(195*8-1)) goto er;
+			if(B>(195*8-1)) goto er;
 			sendchar(0x01);
 			sendchar(0x01);
-//			if((E&0x0007)>0)
-//				sendchar((E>>3)+1);
-//			else
-//				sendchar(E>>3);
 			d=B>>3;
+			B&=0x0007;
 			c=read_registr_param(d);
-			if((c&(1<<(B&0x0007)))>0)
+			if((c&(1<<B))>0)
 				sendchar(0x01);
 			else
 				sendchar(0x00);
@@ -208,24 +204,26 @@ void swit(){
 	case 0x03:
 //	case 0x04:
 			if(COUNT!=8) goto er;
-			if((BUF[3]+BUF[5])>(MEM-1)) goto er;			
+			if((BUF[3]+BUF[5])>MEM) goto er;			
 			sendchar(0x03);
 			sendchar(BUF[5]);
-			for(B=BUF[3];B<(BUF[3]+BUF[5]);B++){	
+			for(d=BUF[3];d<(BUF[3]+BUF[5]);d++){	
 				sendchar(0);
-				sendchar(read_registr_param(B));
+				sendchar(read_registr_param(d));
 			}								
 			goto re;
 	case 0x05:
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
-			if((B+1)>3103)goto er;
-			c=read_registr_param((unsigned char)(B>>3));
+			if(B>(MEM*8-1))goto er;
+			d=(B>>3);
+			B&=0x0007;
+			c=read_registr_param(d);
 			if(BUF[4]==0xFF) 
-				c|=(1<<(B&0x0007));
+				c|=(1<<B);
 			if(BUF[5]==0xFF)
-				c&=~(1<<(B&0x0007));
-			write_registr_param((unsigned char)(B>>3),c);
+				c&=~(1<<B);
+			write_registr_param(d,c);
 			sendchar(0x05);
 			sendchar(BUF[2]);
 			sendchar(BUF[3]);
@@ -234,6 +232,7 @@ void swit(){
 			goto re;
 	case 0x06:		
 			if(COUNT!=8) goto er;
+			if((BUF[3]+BUF[5])>MEM) goto er;			
 			sendchar(0x06);
 			sendchar(0);sendchar(BUF[3]);
 			sendchar(0);sendchar(BUF[5]);
