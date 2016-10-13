@@ -2,11 +2,11 @@
 #include <avr/delay.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
-//#include <stdio.h>
 
 #define F_CPU 8000000L
 #define MAX 20
-
+#define MEM 195
+#define sleep _delay_us(1)
 
 unsigned char PLAN[32];
 unsigned char BLOCK[32];
@@ -17,7 +17,6 @@ volatile unsigned short COUNT_COMAND;
 volatile unsigned short CRC;
 volatile unsigned char status;
 volatile unsigned char BUF[MAX],COUNT;
-
 ISR(TIMER1_COMPA_vect)
 {
 	PORTD&=~(0x40);
@@ -132,6 +131,10 @@ unsigned char read_registr_param(unsigned char address)
 		return (ER1&0xC0)|(DEV1&0x3F);
 	if(address==194)
 		return (ER2&0xC0)|(DEV2&0x3F);
+	if(address==195)
+		return 0;
+	if(address==196)
+		return 0;		
 }
 void write_registr_param(unsigned char address, unsigned char data)
 {
@@ -158,49 +161,55 @@ void write_registr_param(unsigned char address, unsigned char data)
 	if(address==193){
 		DEV1=data;
 		ER1=0;
+		DDRB|=0x07;	
 		return;
 	}		
 	if(address==194){
 		DEV2=data;
 		ER2=0;
+		DDRB|=0x70;	
 		return;
 	}		
 	if(address==195){
-		USART_Init(data);
-		return;
-	}		
-	if(address==196){
 		eeprom_write_byte(1,data);
 		number=data;
 		return;
 	}		
+/*	if(address==196){
+		USART_Init(data);
+		return;
+	}*/		
 }
 
 void swit(){
 	sendchar(number);
-	unsigned short B,E,b;
+	unsigned short B,E;
+	unsigned char c,d;
 	switch(BUF[1]){
 	case 0x01:
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
 			E=1;
-			if((B+E)>3103) goto er;
-			if((E&0x0007)>0)
-				sendchar((E>>3)+1);
-			else
-				sendchar(E>>3);
-			b=read_registr_param((unsigned char)(B>>3));
-			if((b&(1<<(B&0x0007)))>0)
+			if((B+E)>(195*8-1)) goto er;
+			sendchar(0x01);
+			sendchar(0x01);
+//			if((E&0x0007)>0)
+//				sendchar((E>>3)+1);
+//			else
+//				sendchar(E>>3);
+			d=B>>3;
+			c=read_registr_param(d);
+			if((c&(1<<(B&0x0007)))>0)
 				sendchar(0x01);
 			else
 				sendchar(0x00);
 			goto re;
 //				case 0x02:read_bit_input();break;
 	case 0x03:
-	case 0x04:
+//	case 0x04:
 			if(COUNT!=8) goto er;
-			if(BUF[3]+BUF[5]>195) goto er;			
-			sendchar(BUF[1]);
+			if((BUF[3]+BUF[5])>(MEM-1)) goto er;			
+			sendchar(0x03);
 			sendchar(BUF[5]);
 			for(B=BUF[3];B<(BUF[3]+BUF[5]);B++){	
 				sendchar(0);
@@ -211,28 +220,28 @@ void swit(){
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
 			if((B+1)>3103)goto er;
-			b=read_registr_param((unsigned char)(B>>3));
-			if(BUF[4]==0xFF)
-				b|=(1<<(B&0x0007));
+			c=read_registr_param((unsigned char)(B>>3));
+			if(BUF[4]==0xFF) 
+				c|=(1<<(B&0x0007));
 			if(BUF[5]==0xFF)
-				b&=~(1<<(B&0x0007));
-			write_registr_param((unsigned char)(B>>3),b);
-			sendchar(BUF[1]);
+				c&=~(1<<(B&0x0007));
+			write_registr_param((unsigned char)(B>>3),c);
+			sendchar(0x05);
 			sendchar(BUF[2]);
 			sendchar(BUF[3]);
-			sendchar(BUF[4]);
-			sendchar(BUF[5]);
+			sendchar(0x00);
+			sendchar(0x01);
 			goto re;
 	case 0x06:		
 			if(COUNT!=8) goto er;
-			sendchar(BUF[1]);
+			sendchar(0x06);
 			sendchar(0);sendchar(BUF[3]);
 			sendchar(0);sendchar(BUF[5]);
 			write_registr_param(BUF[3],BUF[5]);
 			goto re;
 	case 0x0B:
 			if(COUNT!=4) goto er;
-			sendchar(BUF[1]);
+			sendchar(0x0B);
 			sendchar((unsigned char)(COUNT_COMAND>>8));
 			sendchar((unsigned char)COUNT_COMAND);
 			goto re;
@@ -240,9 +249,7 @@ void swit(){
 //				case 0x10:write_registrs_param();break;
 	case 0x11:
 			if(COUNT!=4) goto er;
-			sendchar(BUF[1]);sendchar(12);sendchar('2');sendchar('3');sendchar(0xFF);
-			sendchar('R');sendchar('e');sendchar('l');sendchar('e');sendchar('y');sendchar(' ');sendchar('1');
-			sendchar('.');sendchar('0');
+			sendchar(0x11);sendchar(3);sendchar(0x23);sendchar(0x01);sendchar(0xFF);
 			goto re;
 	default:
 			COUNT_COMAND--;
@@ -258,7 +265,7 @@ re:
 
 void main(void)
 {
-	unsigned char i,j,e;
+	unsigned char i1,i2,j,e1,e2;
 /*	if(eeprom_read_byte(0)==0xff){
 		eeprom_write_byte(0,0x00);
 		eeprom_write_byte(2,0x00);
@@ -290,7 +297,6 @@ void main(void)
 	TCCR0A=0x02;
 	TCCR0B=0x00;
 	TIMSK=(1<<OCIE0A)|(1<<OCIE0B)|(1<<OCIE1A);
-	DDRB=0x77;
 	sei();
 	while(1){
 		if(status&0x80){
@@ -305,59 +311,48 @@ void main(void)
 			status=0;
 			COUNT=0;
 		}	
-	_delay_ms(100);
-	if((ER1&0xC0)==0){
-		e=0;
-		for(i=0;i<(DEV1&0x3F);i++)
-			for(j=0;j<8;j++){
-				PORTB&=~(0x01);
-				_delay_us(1);
-				if(PLAN[i]&(1<<j)){
-					PORTB|=0x02;
-					if(!(PINB&0x08)) e++;
-				}else{
-					PORTB&=~(0x02);
-					if(PINB&0x08) e++;
-				}				
-				_delay_us(1);
-				PORTB|=0x01;
-				_delay_us(1);
-			}
-			if(e==0){
+		if(ER1>0xC0) DDRB&=~(0x07);
+		if(ER2>0xC0) DDRB&=~(0x70);
+		PORTB&=~(0x11);
+		sleep;
+		if(PLAN[i1]&(1<<j)){
+			if(!(PINB&0x08)) e1++;
+			PORTB|=0x02;
+		}else{
+			if(PINB&0x08) e1++;
+			PORTB&=~(0x02);
+		}				
+		if(PLAN[i2]&(1<<j)){
+			if(!(PINB&0x80)) e2++;
+			PORTB|=0x20;
+		}else{
+			if(PINB&0x80) e2++;
+			PORTB&=~(0x20);
+		}
+		sleep;
+		PORTB|=0x11;
+		sleep;
+		j++;
+		if(j>7){j=0;i1++;i2++;}
+		if(i1>=DEV1){
+			i1=0;
+			if(e1==0){
 				PORTB&=~(0x04);
-				 ER1=0;
-				_delay_us(1);
+				ER1=0;
 			}
-			else
-				ER1++;		
-			PORTB|=0x06;
-	}
-/*	if((ER2&0xC0)==0){
-		e=0;
-		for(i=(DEV1&0x3F);i<(DEV2&0x3F);i++)
-			for(j=0;j<8;j++){
-				PORTB&=~(0x10);
-				_delay_us(1);
-				if(PLAN[i]&(1<<j)){
-					PORTB|=0x20;
-					if(!(PINB&0x80)) e++;
-				}else{
-					PORTB&=~(0x20);
-					if(PINB&0x80) e++;
-				}				
-				_delay_us(1);
-				PORTB|=0x10;
-				_delay_us(1);
+			ER1++;
+			e1=0;
+		}
+		if(i2>=(DEV1+DEV2)){
+			i2=DEV1;
+			if(e2==0){
+				PORTB&=~(0x40);
+				ER2=0;
 			}
-			if(e==0){
- 				PORTB&=~(0x40);
-				 ER2=0;
-				_delay_us(1);
-			}
-			else
-				ER2++;		
-			PORTB|=0x60;
-			}
-*/	
+			ER2++;
+			e2=0;
+		}
+		sleep;
+		PORTB|=0x44;
 	}
 }
