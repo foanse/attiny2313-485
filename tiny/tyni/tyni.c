@@ -205,7 +205,7 @@ void swit(){
 //	case 0x04:
 			if(COUNT!=8) goto er;
 			if((BUF[3]+BUF[5])>MEM) goto er;			
-			sendchar(0x03);
+			sendchar(BUF[1]);
 			sendchar(BUF[5]);
 			for(d=BUF[3];d<(BUF[3]+BUF[5]);d++){	
 				sendchar(0);
@@ -232,7 +232,7 @@ void swit(){
 			goto re;
 	case 0x06:		
 			if(COUNT!=8) goto er;
-			if((BUF[3]+BUF[5])>MEM) goto er;			
+			if(BUF[3]>MEM) goto er;			
 			sendchar(0x06);
 			sendchar(0);sendchar(BUF[3]);
 			sendchar(0);sendchar(BUF[5]);
