@@ -6,7 +6,7 @@
 #define F_CPU 8000000L
 #define MAX 20
 #define MEM 195
-#define sleep _delay_us(1)
+#define sleep _delay_us(100)
 
 unsigned char PLAN[32];
 unsigned char BLOCK[32];
@@ -81,7 +81,7 @@ void sendchar(unsigned char data){
 	}
 	if(!(PORTD&0x04)){
 		PORTD|=0x04;
-		_delay_ms(15);
+		_delay_us(52);
 	}
 	while ( !(UCSRA & (1<<UDRE)) );
 	UDR = data;			        
@@ -91,11 +91,11 @@ void sendcrc(){
 	while ( !(UCSRA & (1<<UDRE)) );
 	UDR = (unsigned char)(CRC>>8);			        
 	while ( !(UCSRA & (1<<UDRE)) );
+	UCSRA|=(1<<TXC);
 	UDR = (unsigned char)CRC;			        
-	while ( !(UCSRA & (1<<UDRE)) );
-	_delay_ms(15);
+	while ( !(UCSRA & (1<<TXC)) );
+	_delay_us(208);
 	PORTD&=~(0x04);
-	CRC=0xFFFF;
 }
 unsigned char CRCin(unsigned char count)
 {
@@ -128,9 +128,11 @@ unsigned char read_registr_param(unsigned char address)
 	if(address==192)
 		return ((PORTD&0x20)>>1)|((PORTD&0x10)>>4);
 	if(address==193)
-		return (ER1&0xC0)|(DEV1&0x3F);
+		return (DEV1&0x3F);
+//		return (ER1&0xC0)|(DEV1&0x3F);
 	if(address==194)
-		return (ER2&0xC0)|(DEV2&0x3F);
+		return (DEV2&0x3F);
+//		return (ER2&0xC0)|(DEV2&0x3F);
 	if(address==195)
 		return 0;
 	if(address==196)
@@ -182,6 +184,7 @@ void write_registr_param(unsigned char address, unsigned char data)
 }
 
 void swit(){
+	CRC=0xFFFF;
 	sendchar(number);
 	unsigned short B,E;
 	unsigned char c,d;
@@ -189,7 +192,7 @@ void swit(){
 	case 0x01:
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
-			if(B>(195*8-1)) goto er;
+			if(B>(MEM*8-1)) goto er;
 			sendchar(0x01);
 			sendchar(0x01);
 			d=B>>3;
@@ -202,7 +205,7 @@ void swit(){
 			goto re;
 //				case 0x02:read_bit_input();break;
 	case 0x03:
-//	case 0x04:
+	case 0x04:
 			if(COUNT!=8) goto er;
 			if((BUF[3]+BUF[5])>MEM) goto er;			
 			sendchar(BUF[1]);
@@ -291,7 +294,7 @@ void main(void)
 	COUNT_COMAND=0;
 	CRC=0xFFFF;
 	TCCR1A=0x00;
-	OCR1AH=0x08;
+	OCR1AH=0x02;
 	OCR1AL=0x00;
 	TCCR0A=0x02;
 	TCCR0B=0x00;
