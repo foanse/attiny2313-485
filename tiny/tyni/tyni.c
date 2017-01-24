@@ -6,67 +6,19 @@
 #define F_CPU 8000000L
 #define MAX 20
 #define MEM 195
-#define sleep _delay_us(100)
+#define sleep _delay_ms(10)
 
 unsigned char PLAN[32];
 unsigned char BLOCK[32];
-unsigned char number;
+unsigned char number,RELE;
 unsigned char DEV1,DEV2,ER1,ER2;
 volatile unsigned short COUNT_COMAND;
 
+volatile unsigned char i1,i2,j,e1,e2;
 volatile unsigned short CRC;
 volatile unsigned char status;
 volatile unsigned char BUF[MAX],COUNT;
-ISR(TIMER1_COMPA_vect)
-{
-	PORTD&=~(0x40);
-	TCCR1B=0x00;
-}
-ISR(USART_RX_vect)
-{
-//	if(status&0x80) return;
-	BUF[COUNT]=UDR;
-	if(UCSRA&0x1C)
-		status|=0x10;
-	if(status&0x20)
-		status|=0x10;	
-	if(COUNT>=MAX)
-		status|=0x10;
-	else
-		COUNT++;
-	TCNT0=0x00;
-	TCCR0B=0x05;
-}
-ISR(TIMER0_COMPA_vect)
-{
-	if((status&0x10)==0){
-		status|=0x80;	
-	}
-	else
-	{
-		status=0x00;
-		COUNT=0;
-	}		
-	TCCR0B=0x00;
-}	
-ISR(TIMER0_COMPB_vect)
-{
-	status|=0x20;
-}
 
-void USART_Init( unsigned char i )
-{
-	unsigned int baudrate;
-	switch (i){
-		default: 
-					baudrate=103;	OCR0A=0x1C;	OCR0B=0x0C;
-	}
-	UBRRH = (unsigned char) (baudrate>>8);
-	UBRRL = (unsigned char) baudrate;
-	UCSRA = (1<<U2X);
-	UCSRB = (1<<RXEN)|(1<<TXEN)|(1<<RXCIE);
-	UCSRC = (0<<USBS)|(1<<UCSZ0)|(1<<UCSZ1);
-} 
 void sendchar(unsigned char data){
 	if(number!=BUF[0]) return;
     unsigned char i;
@@ -94,7 +46,6 @@ void sendcrc(){
 	UCSRA|=(1<<TXC);
 	UDR = (unsigned char)CRC;			        
 	while ( !(UCSRA & (1<<TXC)) );
-	_delay_us(208);
 	PORTD&=~(0x04);
 }
 unsigned char CRCin(unsigned char count)
@@ -129,14 +80,12 @@ unsigned char read_registr_param(unsigned char address)
 		return ((PORTD&0x20)>>1)|((PORTD&0x10)>>4);
 	if(address==193)
 		return (DEV1&0x3F);
-//		return (ER1&0xC0)|(DEV1&0x3F);
 	if(address==194)
 		return (DEV2&0x3F);
-//		return (ER2&0xC0)|(DEV2&0x3F);
-	if(address==195)
+//	if(address==195)
 		return 0;
-	if(address==196)
-		return 0;		
+//	if(address==196)
+//		return 0;		
 }
 void write_registr_param(unsigned char address, unsigned char data)
 {
@@ -163,13 +112,11 @@ void write_registr_param(unsigned char address, unsigned char data)
 	if(address==193){
 		DEV1=data;
 		ER1=0;
-		DDRB|=0x07;	
 		return;
 	}		
 	if(address==194){
 		DEV2=data;
 		ER2=0;
-		DDRB|=0x70;	
 		return;
 	}		
 	if(address==195){
@@ -177,12 +124,7 @@ void write_registr_param(unsigned char address, unsigned char data)
 		number=data;
 		return;
 	}		
-/*	if(address==196){
-		USART_Init(data);
-		return;
-	}*/		
 }
-
 void swit(){
 	CRC=0xFFFF;
 	sendchar(number);
@@ -192,13 +134,13 @@ void swit(){
 	case 0x01:
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
-			if(B>(MEM*8-1)) goto er;
+//			if(B>(MEM*8-1)) goto er;
 			sendchar(0x01);
 			sendchar(0x01);
 			d=B>>3;
 			B&=0x0007;
 			c=read_registr_param(d);
-			if((c&(1<<B))>0)
+			if(c&(1<<B))
 				sendchar(0x01);
 			else
 				sendchar(0x00);
@@ -207,7 +149,7 @@ void swit(){
 	case 0x03:
 	case 0x04:
 			if(COUNT!=8) goto er;
-			if((BUF[3]+BUF[5])>MEM) goto er;			
+//			if((BUF[3]+BUF[5])>MEM) goto er;			
 			sendchar(BUF[1]);
 			sendchar(BUF[5]);
 			for(d=BUF[3];d<(BUF[3]+BUF[5]);d++){	
@@ -218,7 +160,7 @@ void swit(){
 	case 0x05:
 			if(COUNT!=8) goto er;
 			B=(BUF[2]<<8)|BUF[3];
-			if(B>(MEM*8-1))goto er;
+//			if(B>(MEM*8-1))goto er;
 			d=(B>>3);
 			B&=0x0007;
 			c=read_registr_param(d);
@@ -235,7 +177,7 @@ void swit(){
 			goto re;
 	case 0x06:		
 			if(COUNT!=8) goto er;
-			if(BUF[3]>MEM) goto er;			
+//			if(BUF[3]>MEM) goto er;			
 			sendchar(0x06);
 			sendchar(0);sendchar(BUF[3]);
 			sendchar(0);sendchar(BUF[5]);
@@ -263,20 +205,67 @@ er:
 re:	
 	sendcrc();
 }
+ISR(TIMER0_COMPB_vect)
+{
+	TCCR0B=0x00;
+	if(status&0x10) goto end;
+	if((number!=BUF[0])&&(BUF[0]!=0x00)) goto end;
+	if(!CRCin(COUNT-2)) goto end;
+	PORTD|=0x40;
+	TCCR1B=0x0D;
+	COUNT_COMAND++;
+	swit();
+	end:
+	status=0x00;
+	COUNT=0;
+}	
+ISR(TIMER0_COMPA_vect)
+{
+	status|=0x20;
+}
+ISR(USART_RX_vect)
+{
+	BUF[COUNT]=UDR;
+	if((UCSRA&0x1C)||(status&0x20)||(COUNT>=MAX)){
+		status|=0x10;
+		return;
+	}
+	COUNT++;
+	TCNT0=0x00;
+	TCCR0B=0x05;
+}
+ISR(TIMER1_COMPA_vect)
+{
+	PORTD&=~(0x40);
+	TCCR1B=0x00;
+}
 
+void USART_Init(void)
+{
+	TIMSK=0;
+	//UART
+	UBRRH = 0;
+	UBRRL = 103;
+	UCSRA = (1<<U2X);
+	UCSRB = (1<<RXEN)|(1<<TXEN)|(1<<RXCIE);
+	UCSRC = (0<<USBS)|(1<<UCSZ0)|(1<<UCSZ1);
+
+	//timer0 
+	TCCR0A=0x00;
+	TCCR0B=0x00;
+	OCR0A=0x0C;
+	OCR0B=0x1C;
+	TIMSK|=(1<<OCIE0A)|(1<<OCIE0B);
+	
+	//timer1
+	TCCR1A=0x00;
+	OCR1AH=0x02;
+	OCR1AL=0x00;
+	TIMSK|=(1<<OCIE1A);
+} 
 
 void main(void)
 {
-	unsigned char i1,i2,j,e1,e2;
-/*	if(eeprom_read_byte(0)==0xff){
-		eeprom_write_byte(0,0x00);
-		eeprom_write_byte(2,0x00);
-		eeprom_write_byte(3,0x00);
-		eeprom_write_byte(4,0x00);
-		for(i=8;i<80;i++)
-			eeprom_write_byte(i,0x00);
-	}
-*/	USART_Init(eeprom_read_byte(0));
 	number=eeprom_read_byte(1);
 	DEV1=eeprom_read_byte(2);
 	DEV2=eeprom_read_byte(3);
@@ -284,7 +273,8 @@ void main(void)
 	ER2=0;
 	DDRB= 0x77;
 	DDRD= 0x74;
-	PORTD=eeprom_read_byte(4)&0x30;
+	RELE=eeprom_read_byte(4);
+	PORTD=RELE&0x30;
 	for(COUNT=0;COUNT<32;COUNT++){
 		BLOCK[COUNT]=eeprom_read_byte(40+COUNT);
 		PLAN[COUNT]=eeprom_read_byte(8+COUNT)&BLOCK[COUNT];
@@ -293,68 +283,48 @@ void main(void)
 	status=0;
 	COUNT_COMAND=0;
 	CRC=0xFFFF;
-	TCCR1A=0x00;
-	OCR1AH=0x02;
-	OCR1AL=0x00;
-	TCCR0A=0x02;
-	TCCR0B=0x00;
-	TIMSK=(1<<OCIE0A)|(1<<OCIE0B)|(1<<OCIE1A);
+	USART_Init();
 	sei();
 	while(1){
-		if(status&0x80){
-			if((number==BUF[0]|BUF[0]==0x00)){
-				if(CRCin(COUNT-2)){
-					PORTD|=0x40;
-					TCCR1B=0x0D;
-					COUNT_COMAND++;
-					swit();
-					}
-			}	
-			status=0;
-			COUNT=0;
-		}	
-		if(ER1>0xC0) DDRB&=~(0x07);
-		if(ER2>0xC0) DDRB&=~(0x70);
-		PORTB&=~(0x11);
-		sleep;
-		if(PLAN[i1]&(1<<j)){
-			if(!(PINB&0x08)) e1++;
-			PORTB|=0x02;
-		}else{
-			if(PINB&0x08) e1++;
-			PORTB&=~(0x02);
-		}				
-		if(PLAN[i2]&(1<<j)){
-			if(!(PINB&0x80)) e2++;
-			PORTB|=0x20;
-		}else{
-			if(PINB&0x80) e2++;
-			PORTB&=~(0x20);
+	if((ER1==0xFF)&&(RELE&0x01))
+		PORTD&=~(0x10);		
+	if((ER2==0xFF)&&(RELE&0x02))
+		PORTD&=~(0x20);
+
+	PORTB&=~(0x33);
+	sleep;
+	if(PLAN[i1]&(1<<j)){
+		if(!(PINB&0x08)) e1++;
+		PORTB|=0x02;
+	}
+
+	if(PLAN[i2]&(1<<j)){
+		if(!(PINB&0x80)) e2++;
+		PORTB|=0x20;
+	}
+	sleep;
+	PORTB|=0x11;
+	j++;
+	if(j>7){j=0;i1++;i2++;}
+	if(i1>=DEV1){
+		i1=0;
+		if(e1==0){
+			PORTB&=~(0x04);
+			ER1=0;
 		}
-		sleep;
-		PORTB|=0x11;
-		sleep;
-		j++;
-		if(j>7){j=0;i1++;i2++;}
-		if(i1>=DEV1){
-			i1=0;
-			if(e1==0){
-				PORTB&=~(0x04);
-				ER1=0;
-			}
-			ER1++;
-			e1=0;
+		ER1++;
+		e1=0;
+	}
+	if(i2>=(DEV1+DEV2)){
+		i2=DEV1;
+		if(e2==0){
+			PORTB&=~(0x40);
+			ER2=0;
 		}
-		if(i2>=(DEV1+DEV2)){
-			i2=DEV1;
-			if(e2==0){
-				PORTB&=~(0x40);
-				ER2=0;
-			}
-			ER2++;
-			e2=0;
-		}
-		sleep;
-		PORTB|=0x44;
+		ER2++;
+		e2=0;
+	}
+	sleep;
+	PORTB|=0x44;
 	}
 }
